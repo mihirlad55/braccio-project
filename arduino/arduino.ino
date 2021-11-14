@@ -16,8 +16,11 @@ Servo wrist_rot;
 Servo wrist_ver;
 Servo gripper;
 
-
+// Braccio Arm
 BraccioArm arm(Braccio);
+
+// Delay between steps in routine in ms
+const int ROUTINE_STEP_DELAY = 1000;
 
 /**
  * Check if an obstacle is detected
@@ -44,48 +47,68 @@ void setup() {
 
   // Initialize serial
   Serial.begin(9600);
+
+  // Move to start position
+  arm.move({0, 90, 90, 90, 90, 10});
+  delay(ROUTINE_STEP_DELAY);
+
+  // Get ready to pick up
+  arm.move({0, 45, 180, 180, 0, 10});
+  delay(ROUTINE_STEP_DELAY);
+
+  // Reach down
+  arm.move_shoulder(90);
+  delay(ROUTINE_STEP_DELAY);
 }
 
 void movePrimaryPath() {
   // Turn around
   arm.move_base(180);
-  delay(1000);
+  delay(ROUTINE_STEP_DELAY);
+}
+
+void movePrimaryPathReturn() {
+  // Turn around
+  arm.move_base(0);
+  delay(ROUTINE_STEP_DELAY);
 }
 
 void moveSecondaryPath() {
   // Raise arm higher
   arm.move_wrist_ver(90);
-  delay(1000);
+  delay(ROUTINE_STEP_DELAY);
 
   // Turn around
   arm.move_base(180);
-  delay(1000);
+  delay(ROUTINE_STEP_DELAY);
 
   // Lower arm
   arm.move_wrist_ver(180);
-  delay(1000);
+  delay(ROUTINE_STEP_DELAY);
+}
+
+void moveSecondaryPathReturn() {
+  // Raise arm higher
+  arm.move_wrist_ver(90);
+  delay(ROUTINE_STEP_DELAY);
+
+  // Turn around
+  arm.move_base(0);
+  delay(ROUTINE_STEP_DELAY);
+
+  // Lower arm
+  arm.move_wrist_ver(180);
+  delay(ROUTINE_STEP_DELAY);
 }
 
 void loop() {
-  // Move to start position
-  arm.move({0, 90, 90, 90, 90, 10});
-  delay(1000);
-
-  // Get ready to pick up
-  arm.move({0, 45, 180, 180, 0, 10});
-  delay(1000);
-
-  // Reach down
-  arm.move_shoulder(90);
-  delay(1000);
-
   // Grab object
   arm.close_gripper();
-  delay(1000);
+  delay(ROUTINE_STEP_DELAY);
 
   // Move up
   arm.move_shoulder(45);
-  delay(1000);
+  delay(ROUTINE_STEP_DELAY);
 
   // Use collision-avoiding path
   if (!isObstacleDetected())
@@ -95,13 +118,31 @@ void loop() {
 
   // Reach down
   arm.move_shoulder(90);
-  delay(1000);
+  delay(ROUTINE_STEP_DELAY);
 
   // Let go of object
   arm.open_gripper();
-  delay(1000);
+  delay(ROUTINE_STEP_DELAY);
 
-  // Move arm up
+  // Grab object again
+  arm.close_gripper();
+  delay(ROUTINE_STEP_DELAY);
+
+  // Move up
   arm.move_shoulder(45);
-  delay(1000);
+  delay(ROUTINE_STEP_DELAY);
+
+  // Use collision-avoiding path
+  if (!isObstacleDetected())
+    movePrimaryPathReturn();
+  else
+    moveSecondaryPathReturn();
+
+  // Reach down
+  arm.move_shoulder(90);
+  delay(ROUTINE_STEP_DELAY);
+
+  // Let go of object
+  arm.open_gripper();
+  delay(ROUTINE_STEP_DELAY);
 }
