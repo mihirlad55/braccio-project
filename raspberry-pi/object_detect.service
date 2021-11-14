@@ -1,0 +1,10 @@
+[Unit]
+Description=Start object_detect.py script
+
+[Service]
+ExecStart=/usr/bin/object_detect.py
+Type=simple
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target
